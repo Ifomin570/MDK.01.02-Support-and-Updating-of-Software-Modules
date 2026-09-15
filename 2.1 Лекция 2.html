@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Виды ошибок. Методы отладки</title>
+
+<style>
+:root{
+    --yellow:#F5C400;
+    --yellow2:#FFD84D;
+    --yellow-soft:#FFF7D6;
+    --black:#171717;
+    --gray:#666;
+    --light:#F7F7F5;
+    --white:#FFFFFF;
+    --border:#E8E8E3;
+    --green:#2E8B57;
+    --red:#D64545;
+    --blue:#4477AA;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+    margin:0;
+    padding:0;
+    font-family:Inter,Arial,sans-serif;
+    background:#e9e9e6;
+    color:var(--black);
+}
+
+body{
+    overflow:hidden;
+}
+
+.deck{
+    width:100vw;
+    height:100vh;
+    position:relative;
+}
+
+.slide{
+    display:none;
+    width:100vw;
+    height:100vh;
+    padding:54px 72px 48px;
+    background:var(--light);
+    position:relative;
+    overflow:hidden;
+}
+
+.slide.active{
+    display:block;
+}
+
+.slide:before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:7px;
+    background:var(--yellow);
+}
+
+.slide-number{
+    position:absolute;
+    right:55px;
+    bottom:30px;
+    color:#999;
+    font-size:14px;
+}
+
+h1{
+    font-size:54px;
+    line-height:1.05;
+    margin:0 0 22px;
+    letter-spacing:-2px;
+}
+
+h2{
+    font-size:38px;
+    margin:0 0 14px;
+    letter-spacing:-1px;
+}
+
+h3{
+    font-size:21px;
+    margin:0 0 10px;
+}
+
+p{
+    font-size:18px;
+    line-height:1.55;
+    color:#444;
+}
+
+.subtitle{
+    color:#777;
+    font-size:20px;
+    max-width:850px;
+}
+
+.label{
+    display:inline-block;
+    background:var(--yellow-soft);
+    color:#765e00;
+    font-weight:700;
+    padding:8px 13px;
+    border-radius:999px;
+    font-size:14px;
+    margin-bottom:18px;
+}
+
+.grid{
+    display:grid;
+    gap:18px;
+}
+
+.grid-2{
+    grid-template-columns:1fr 1fr;
+}
+
+.grid-3{
+    grid-template-columns:repeat(3,1fr);
+}
+
+.grid-4{
+    grid-template-columns:repeat(4,1fr);
+}
+
+.card{
+    background:white;
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:23px;
+    box-shadow:0 8px 25px rgba(0,0,0,.035);
+}
+
+.card.yellow{
+    background:var(--yellow-soft);
+    border-color:#f0d45d;
+}
+
+.card.dark{
+    background:#1c1c1b;
+    color:white;
+}
+
+.card.dark p{
+    color:#ddd;
+}
+
+.big{
+    font-size:28px;
+    font-weight:800;
+}
+
+.small{
+    font-size:14px;
+    color:#777;
+}
+
+ul{
+    padding-left:22px;
+    margin:10px 0;
+}
+
+li{
+    margin:8px 0;
+    font-size:17px;
+    line-height:1.4;
+}
+
+.code{
+    background:#181818;
+    color:#f4f4f4;
+    border-radius:17px;
+    padding:22px;
+    font-family:"Courier New",monospace;
+    font-size:17px;
+    line-height:1.55;
+    overflow:auto;
+    white-space:pre;
+}
+
+.keyword{color:#FFD84D}
+.string{color:#9BE564}
+.comment{color:#999}
+
+.callout{
+    border-left:5px solid var(--yellow);
+    background:white;
+    border-radius:0 15px 15px 0;
+    padding:18px 22px;
+    margin-top:18px;
+}
+
+.callout strong{
+    display:block;
+    margin-bottom:5px;
+}
+
+.flow{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:35px 0;
+}
+
+.flow-item{
+    padding:17px 20px;
+    border-radius:15px;
+    background:white;
+    border:1px solid var(--border);
+    font-weight:700;
+    text-align:center;
+    min-width:145px;
+}
+
+.flow-item.active{
+    background:var(--yellow);
+    border-color:var(--yellow);
+}
+
+.arrow{
+    font-size:26px;
+    color:#888;
+}
+
+.compare{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+    border-radius:18px;
+    overflow:hidden;
+}
+
+.compare th{
+    background:#222;
+    color:white;
+    text-align:left;
+    padding:15px;
+}
+
+.compare td{
+    border-bottom:1px solid var(--border);
+    padding:14px 15px;
+    font-size:16px;
+    vertical-align:top;
+}
+
+.compare tr:last-child td{
+    border-bottom:0;
+}
+
+.tag{
+    display:inline-block;
+    padding:5px 9px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:700;
+    background:#eee;
+}
+
+.tag.yellow{
+    background:var(--yellow-soft);
+    color:#765e00;
+}
+
+.tag.red{
+    background:#ffe4e4;
+    color:#9b2d2d;
+}
+
+.tag.green{
+    background:#e4f4eb;
+    color:#276d45;
+}
+
+.timeline{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+    margin:30px 0;
+}
+
+.step{
+    padding:20px 14px;
+    background:white;
+    border:1px solid var(--border);
+    min-height:130px;
+    border-radius:16px;
+    position:relative;
+}
+
+.step b{
+    display:block;
+    margin-bottom:10px;
+}
+
+.step .num{
+    width:30px;
+    height:30px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--yellow);
+    border-radius:50%;
+    font-weight:800;
+    margin-bottom:12px;
+}
+
+.legend{
+    display:flex;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-top:14px;
+    color:#555;
+    font-size:14px;
+}
+
+.legend span{
+    display:flex;
+    align-items:center;
+    gap:7px;
+}
+
+.dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    display:inline-block;
+}
+
+.dot.yellow{background:var(--yellow)}
+.dot.red{background:var(--red)}
+.dot.green{background:var(--green)}
+.dot.blue{background:var(--blue)}
+
+.question{
+    font-size:25px;
+    font-weight:800;
+    margin-bottom:15px;
+}
+
+.footer-note{
+    position:absolute;
+    left:72px;
+    bottom:28px;
+    color:#999;
+    font-size:13px;
+}
+
+.nav{
+    position:fixed;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:100;
+    display:flex;
+    gap:8px;
+    background:rgba(255,255,255,.92);
+    border:1px solid #ddd;
+    padding:7px;
+    border-radius:999px;
+    box-shadow:0 8px 25px rgba(0,0,0,.08);
+}
+
+.nav button{
+    border:0;
+    background:#eee;
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    cursor:pointer;
+    font-weight:700;
+}
+
+.nav button:hover{
+    background:var(--yellow);
+}
+
+.progress{
+    position:fixed;
+    top:7px;
+    left:0;
+    height:3px;
+    background:#222;
+    z-index:101;
+    transition:.3s;
+}
+
+.center{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    height:100%;
+}
+
+.hero{
+    max-width:1000px;
+}
+
+.hero-mark{
+    width:80px;
+    height:80px;
+    background:var(--yellow);
+    border-radius:25px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:38px;
+    font-weight:900;
+    margin-bottom:30px;
+}
+
+.number{
+    font-size:80px;
+    font-weight:900;
+    line-height:1;
+    color:var(--yellow);
+}
+
+.highlight{
+    background:linear-gradient(
+        transparent 55%,
+        var(--yellow) 55%
+    );
+}
+
+.mono{
+    font-family:"Courier New",monospace;
+}
+
+@media(max-width:900px){
+    .slide{
+        padding:35px;
+    }
+
+    h1{font-size:40px}
+    h2{font-size:30px}
+    p,li{font-size:15px}
+
+    .grid-3,
+    .grid-4,
+    .grid-2{
+        grid-template-columns:1fr;
+    }
+
+    .timeline{
+        grid-template-columns:1fr;
+    }
+
+    .footer-note{
+        left:35px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="deck">
+
+<div class="progress" id="progress"></div>
+
+<!-- 01 -->
+<section class="slide active">
+    <div class="center">
+        <div class="hero">
+            <div class="hero-mark">⌁</div>
+            <div class="label">МДК.01.02 · Поддержка и тестирование программных модулей</div>
+            <h1>Виды ошибок.<br><span class="highlight">Методы отладки</span></h1>
+            <p class="subtitle">
+                Учебник-презентация для первой пары. 
+                Как понять, почему программа работает неправильно,
+                найти причину и подготовить её к исправлению.
+            </p>
+
+            <div class="flow" style="justify-content:flex-start">
+                <div class="flow-item">Обнаружить</div>
+                <div class="arrow">→</div>
+                <div class="flow-item">Понять</div>
+                <div class="arrow">→</div>
+                <div class="flow-item active">Найти причину</div>
+                <div class="arrow">→</div>
+                <div class="flow-item">Исправить</div>
+            </div>
+        </div>
+    </div>
+    <div class="slide-number">01 / 17</div>
+</section>
+
+
+<!-- 02 -->
+<section class="slide">
+    <div class="label">01 · Что изучаем</div>
+    <h2>После этой пары вы должны понимать</h2>
+    <p class="subtitle">
+        Отладка начинается не с кнопки Debug. Сначала разработчик должен
+        правильно понять проблему.
+    </p>
+
+    <div class="grid grid-3" style="margin-top:30px">
+
+        <div class="card yellow">
+            <div class="number">01</div>
+            <h3>Какие бывают ошибки</h3>
+            <p>
+                Синтаксические, ошибки времени выполнения,
+                логические и другие дефекты.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="number">02</div>
+            <h3>Как возникает проблема</h3>
+            <p>
+                От неправильного решения разработчика
+                до неправильного результата программы.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="number">03</div>
+            <h3>Как искать причину</h3>
+            <p>
+                Воспроизведение → анализ → гипотеза →
+                проверка → локализация.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="number">04</div>
+            <h3>Что такое отладка</h3>
+            <p>
+                Систематический поиск причины дефекта
+                и проверка поведения программы.
+            </p>
+        </div>
+
+        <div class="card">
+            <div class="number">05</div>
+            <h3>Какие есть методы</h3>
+            <p>
+                Вывод значений, логи, breakpoint,
+                пошаговое выполнение.
+            </p>
+        </div>
+
+        <div class="card dark">
+            <div class="number">06</div>
+            <h3>Главный навык</h3>
+            <p>
+                Не угадывать, а последовательно проверять
+                гипотезы о причине ошибки.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="slide-number">02 / 17</div>
+</section>
+
+
+<!-- 03 -->
+<section class="slide">
+    <div class="label">02 · Базовые понятия</div>
+    <h2>Ошибка, дефект, сбой — это не одно и то же</h2>
+
+    <div class="grid grid-3" style="margin-top:35px">
+
+        <div class="card">
+            <span class="tag yellow">ERROR</span>
+            <h3 style="margin-top:16px">Ошибка человека</h3>
+            <p>
+                Неправильное действие или решение разработчика,
+                аналитика, тестировщика или другого участника проекта.
+            </p>
+            <div class="callout">
+                <strong>Пример</strong>
+                Разработчик неправильно понял формулу расчёта скидки.
+            </div>
+        </div>
+
+        <div class="card">
+            <span class="tag red">DEFECT / BUG</span>
+            <h3 style="margin-top:16px">Дефект в ПО</h3>
+            <p>
+                Несоответствие программы требованиям или ожидаемому
+                поведению, которое появилось в результате ошибки.
+            </p>
+            <div class="callout">
+                <strong>Пример</strong>
+                В коде записана неправильная формула.
+            </div>
+        </div>
+
+        <div class="card">
+            <span class="tag green">FAILURE</span>
+            <h3 style="margin-top:16px">Сбой</h3>
+            <p>
+                Наблюдаемое неправильное поведение работающей системы,
+                вызванное дефектом.
+            </p>
+            <div class="callout">
+                <strong>Пример</strong>
+                Пользователь получает неправильную сумму заказа.
+            </div>
+        </div>
+
+    </div>
+
+    <div class="flow">
+        <div class="flow-item">Ошибка человека</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Дефект в коде</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Сбой</div>
+        <div class="arrow">→</div>
+        <div class="flow-item active">Обнаружение тестом</div>
+    </div>
+
+    <div class="slide-number">03 / 17</div>
+</section>
+
+
+<!-- 04 -->
+<section class="slide">
+    <div class="label">03 · Классификация</div>
+    <h2>Основные виды ошибок</h2>
+    <p class="subtitle">
+        Для начинающего разработчика особенно важно научиться
+        различать три фундаментальные категории.
+    </p>
+
+    <div class="grid grid-3" style="margin-top:35px">
+
+        <div class="card yellow">
+            <div class="big">01</div>
+            <h3>Синтаксические</h3>
+            <p>
+                Нарушены правила языка программирования.
+                Интерпретатор или компилятор не может корректно
+                обработать код.
+            </p>
+            <span class="tag yellow">Код не может быть корректно разобран</span>
+        </div>
+
+        <div class="card">
+            <div class="big">02</div>
+            <h3>Ошибки выполнения</h3>
+            <p>
+                Код синтаксически допустим, но проблема возникает
+                во время выполнения программы.
+            </p>
+            <span class="tag red">Runtime</span>
+        </div>
+
+        <div class="card">
+            <div class="big">03</div>
+            <h3>Логические</h3>
+            <p>
+                Программа запускается, но выполняет не то,
+                что требовалось.
+            </p>
+            <span class="tag green">Неверный результат</span>
+        </div>
+
+    </div>
+
+    <div class="callout">
+        <strong>Главное различие</strong>
+        Синтаксическая ошибка мешает корректно разобрать код.
+        Runtime-ошибка возникает при выполнении.
+        Логическая ошибка может вообще не вызвать сообщения об ошибке —
+        программа просто выдаёт неправильный результат.
+    </div>
+
+    <div class="slide-number">04 / 17</div>
+</section>
+
+
+<!-- 05 -->
+<section class="slide">
+    <div class="label">04 · Синтаксические ошибки</div>
+    <h2>Синтаксис: программа не понимает конструкцию</h2>
+
+    <div class="grid grid-2" style="margin-top:25px">
+
+        <div>
+            <div class="code"><span class="keyword">name</span> = <span class="string">"Иван"</span>
+<span class="keyword">print</span>(name</div>
+
+            <div class="callout">
+                <strong>Что произошло?</strong>
+                Вызов функции print() не закрыт круглой скобкой.
+                Синтаксическая конструкция незавершена.
+            </div>
+
+            <div class="callout">
+                <strong>Что происходит с программой?</strong>
+                До нормального выполнения дело не доходит:
+                интерпретатор обнаруживает проблему при разборе кода.
+            </div>
+        </div>
+
+        <div>
+            <h3>Типичные причины</h3>
+
+            <div class="card">
+                <ul>
+                    <li>пропущена скобка;</li>
+                    <li>пропущена кавычка;</li>
+                    <li>неправильно записан оператор;</li>
+                    <li>нарушены отступы в Python;</li>
+                    <li>пропущен обязательный символ;</li>
+                    <li>неправильно оформлена конструкция.</li>
+                </ul>
+            </div>
+
+            <h3 style="margin-top:22px">Как обнаружить?</h3>
+
+            <div class="flow" style="margin:10px 0;justify-content:flex-start">
+                <div class="flow-item">Запустить</div>
+                <div class="arrow">→</div>
+                <div class="flow-item active">Сообщение</div>
+                <div class="arrow">→</div>
+                <div class="flow-item">Строка</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="slide-number">05 / 17</div>
+</section>
+
+
+<!-- 06 -->
+<section class="slide">
+    <div class="label">05 · Ошибки времени выполнения</div>
+    <h2>Runtime Error: код запускается, но выполнение ломается</h2>
+
+    <div class="grid grid-2" style="margin-top:30px">
+
+        <div class="code">numbers = [10, 20, 30]
+
+<span class="keyword">print</span>(numbers[5])</div>
+
+        <div class="card">
+            <h3>Что здесь происходит?</h3>
+            <ol>
+                <li>Список создан корректно.</li>
+                <li>Программа запускается.</li>
+                <li>Код пытается получить элемент с индексом 5.</li>
+                <li>Такого элемента в списке нет.</li>
+                <li>Во время выполнения возникает исключение.</li>
+            </ol>
+        </div>
+
+    </div>
+
+    <div class="grid grid-3" style="margin-top:25px">
+
+        <div class="card">
+            <h3>Деление на ноль</h3>
+            <div class="code">x = 10
+y = 0
+print(x / y)</div>
+        </div>
+
+        <div class="card">
+            <h3>Несуществующий файл</h3>
+            <div class="code">open("data.txt")</div>
+        </div>
+
+        <div class="card">
+            <h3>Неправильный индекс</h3>
+            <div class="code">items = [1, 2]
+print(items[10])</div>
+        </div>
+
+    </div>
+
+    <div class="callout">
+        <strong>Запомните</strong>
+        Runtime Error часто можно исследовать по сообщению исключения,
+        типу исключения и строке, на которой оно возникло.
+    </div>
+
+    <div class="slide-number">06 / 17</div>
+</section>
+
+
+<!-- 07 -->
+<section class="slide">
+    <div class="label">06 · Логические ошибки</div>
+    <h2>Самые коварные: программа работает, но делает не то</h2>
+
+    <div class="grid grid-2" style="margin-top:25px">
+
+        <div>
+            <div class="code">price = 1000
+discount = 20
+
+result = price - discount
+
+<span class="keyword">print</span>(result)</div>
+
+            <div class="callout">
+                <strong>Почему это логическая ошибка?</strong>
+                Код синтаксически корректен и может выполниться
+                без исключения. Но если discount означает 20%,
+                расчёт выполнен неправильно.
+            </div>
+        </div>
+
+        <div>
+            <h3>Что должен делать разработчик?</h3>
+
+            <div class="timeline">
+                <div class="step">
+                    <div class="num">1</div>
+                    <b>Требование</b>
+                    Определить, какой результат считается правильным.
+                </div>
+
+                <div class="step">
+                    <div class="num">2</div>
+                    <b>Факт</b>
+                    Получить реальный результат программы.
+                </div>
+
+                <div class="step">
+                    <div class="num">3</div>
+                    <b>Сравнение</b>
+                    Найти расхождение.
+                </div>
+
+                <div class="step">
+                    <div class="num">4</div>
+                    <b>Причина</b>
+                    Найти неправильную логику.
+                </div>
+
+                <div class="step">
+                    <div class="num">5</div>
+                    <b>Исправление</b>
+                    Изменить алгоритм и повторно проверить.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="slide-number">07 / 17</div>
+</section>
+
+
+<!-- 08 -->
+<section class="slide">
+    <div class="label">07 · Другие категории</div>
+    <h2>Ошибки бывают не только в коде</h2>
+
+    <div class="grid grid-4" style="margin-top:30px">
+
+        <div class="card">
+            <div class="big">DATA</div>
+            <h3>Ошибки данных</h3>
+            <p>
+                Программа получает некорректные,
+                неожиданные или неполные данные.
+            </p>
+            <span class="small">Пустое поле, неверный формат, отрицательное значение.</span>
+        </div>
+
+        <div class="card yellow">
+            <div class="big">UI</div>
+            <h3>Ошибки интерфейса</h3>
+            <p>
+                Интерфейс не соответствует требованиям
+                или неправильно реагирует на действия пользователя.
+            </p>
+            <span class="small">Кнопка не работает, поле принимает неверный ввод.</span>
+        </div>
+
+        <div class="card">
+            <div class="big">API</div>
+            <h3>Ошибки интеграции</h3>
+            <p>
+                Несовместимость или неправильное взаимодействие
+                между компонентами системы.
+            </p>
+            <span class="small">Неверный формат запроса или ответа.</span>
+        </div>
+
+        <div class="card">
+            <div class="big">ENV</div>
+            <h3>Ошибки окружения</h3>
+            <p>
+                Проблема возникает из-за настроек среды,
+                конфигурации или внешних зависимостей.
+            </p>
+            <span class="small">Путь к файлу, переменные окружения, версия библиотеки.</span>
+        </div>
+
+    </div>
+
+    <div class="callout">
+        <strong>Профессиональный подход</strong>
+        Не нужно сразу считать виноватым код.
+        Сначала определите, на каком уровне возникает проблема:
+        данные → интерфейс → логика → модуль → API → окружение.
+    </div>
+
+    <div class="slide-number">08 / 17</div>
+</section>
+
+
+<!-- 09 -->
+<section class="slide">
+    <div class="label">08 · Тестирование и отладка</div>
+    <h2>Тестирование ≠ отладка</h2>
+
+    <table class="compare" style="margin-top:30px">
+        <tr>
+            <th>Тестирование</th>
+            <th>Отладка</th>
+        </tr>
+
+        <tr>
+            <td>
+                <b>Ищет наличие проблемы.</b>
+                <br><br>
+                Проверяет фактическое поведение программы
+                относительно ожидаемого результата.
+            </td>
+
+            <td>
+                <b>Ищет причину проблемы.</b>
+                <br><br>
+                Помогает локализовать участок кода и понять,
+                почему программа ведёт себя неправильно.
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Вопрос:
+                <strong>«Работает ли программа правильно?»</strong>
+            </td>
+
+            <td>
+                Вопрос:
+                <strong>«Почему программа работает неправильно?»</strong>
+            </td>
+        </tr>
+
+        <tr>
+            <td>
+                Инструменты:
+                тест-кейсы, проверки, автоматические тесты.
+            </td>
+
+            <td>
+                Инструменты:
+                debugger, breakpoint, логи, вывод значений.
+            </td>
+        </tr>
+    </table>
+
+    <div class="flow">
+        <div class="flow-item active">Тестирование</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Обнаружен дефект</div>
+        <div class="arrow">→</div>
+        <div class="flow-item active">Отладка</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Исправление</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Повторный тест</div>
+    </div>
+
+    <div class="slide-number">09 / 17</div>
+</section>
+
+
+<!-- 10 -->
+<section class="slide">
+    <div class="label">09 · Что такое отладка</div>
+    <h2>Отладка — это расследование</h2>
+
+    <p class="subtitle">
+        Отладка (debugging) — процесс поиска, анализа и локализации
+        причины неправильного поведения программы.
+    </p>
+
+    <div class="flow" style="margin-top:45px">
+
+        <div class="flow-item">
+            <b>Симптом</b><br>
+            Что увидели?
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item">
+            <b>Воспроизведение</b><br>
+            Повторяется ли?
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item active">
+            <b>Гипотеза</b><br>
+            Почему?
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item">
+            <b>Проверка</b><br>
+            Так ли это?
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item">
+            <b>Локализация</b><br>
+            Где причина?
+        </div>
+
+    </div>
+
+    <div class="grid grid-3">
+
+        <div class="card">
+            <h3>Плохой подход</h3>
+            <p>
+                «Давайте поменяем несколько строк и посмотрим,
+                заработает ли».
+            </p>
+        </div>
+
+        <div class="card yellow">
+            <h3>Хороший подход</h3>
+            <p>
+                «Сначала определим, где появляется неправильное
+                значение, затем проверим гипотезу».
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Главное правило</h3>
+            <p>
+                <strong>Меняйте одну причину за раз.</strong>
+                Иначе вы не поймёте, какое изменение решило проблему.
+            </p>
+        </div>
+
+    </div>
+
+    <div class="slide-number">10 / 17</div>
+</section>
+
+
+<!-- 11 -->
+<section class="slide">
+    <div class="label">10 · Алгоритм отладки</div>
+    <h2>Пошаговый алгоритм поиска ошибки</h2>
+
+    <div class="timeline">
+
+        <div class="step">
+            <div class="num">1</div>
+            <b>Получить симптом</b>
+            Ошибка, неверный результат или неожиданное поведение.
+        </div>
+
+        <div class="step">
+            <div class="num">2</div>
+            <b>Воспроизвести</b>
+            Повторить проблему в тех же условиях.
+        </div>
+
+        <div class="step">
+            <div class="num">3</div>
+            <b>Собрать данные</b>
+            Входные значения, сообщение, состояние программы.
+        </div>
+
+        <div class="step">
+            <div class="num">4</div>
+            <b>Локализовать</b>
+            Найти участок программы, где возникает проблема.
+        </div>
+
+        <div class="step">
+            <div class="num">5</div>
+            <b>Проверить гипотезу</b>
+            Подтвердить или опровергнуть предполагаемую причину.
+        </div>
+
+    </div>
+
+    <div class="flow">
+
+        <div class="flow-item">Исправить</div>
+        <div class="arrow">→</div>
+        <div class="flow-item active">Повторить тест</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Проверить регрессию</div>
+
+    </div>
+
+    <div class="callout">
+        <strong>Важно</strong>
+        Хорошая отладка заканчивается не тогда, когда «ошибка исчезла»,
+        а когда исправление проверено повторным тестом и не сломало
+        другое поведение программы.
+    </div>
+
+    <div class="slide-number">11 / 17</div>
+</section>
+
+
+<!-- 12 -->
+<section class="slide">
+    <div class="label">11 · Метод №1</div>
+    <h2>Проверка промежуточных значений</h2>
+
+    <div class="grid grid-2" style="margin-top:30px">
+
+        <div>
+            <h3>До диагностики</h3>
+
+            <div class="code">price = 1000
+quantity = 2
+discount = 10
+
+total = price * quantity - discount
+
+<span class="keyword">print</span>(total)</div>
+
+            <p>
+                Мы видим только итоговое значение.
+                Но не знаем, что происходило внутри расчёта.
+            </p>
+        </div>
+
+        <div>
+            <h3>Добавляем диагностический вывод</h3>
+
+            <div class="code">subtotal = price * quantity
+
+<span class="keyword">print</span>(
+    <span class="string">"subtotal ="</span>,
+    subtotal
+)
+
+discount_sum = subtotal * discount / 100
+
+<span class="keyword">print</span>(
+    <span class="string">"discount ="</span>,
+    discount_sum
+)
+
+total = subtotal - discount_sum
+
+<span class="keyword">print</span>(
+    <span class="string">"total ="</span>,
+    total
+)</div>
+        </div>
+
+    </div>
+
+    <div class="callout">
+        <strong>Идея метода</strong>
+        Мы превращаем невидимое выполнение программы в последовательность
+        наблюдаемых промежуточных состояний.
+    </div>
+
+    <div class="slide-number">12 / 17</div>
+</section>
+
+
+<!-- 13 -->
+<section class="slide">
+    <div class="label">12 · Метод №2</div>
+    <h2>Логирование</h2>
+
+    <div class="grid grid-2" style="margin-top:30px">
+
+        <div class="card yellow">
+            <h3>Что такое лог?</h3>
+            <p>
+                Лог — это запись событий, происходящих во время работы
+                программы.
+            </p>
+
+            <div class="flow" style="margin:20px 0">
+                <div class="flow-item">Запуск</div>
+                <div class="arrow">→</div>
+                <div class="flow-item">Событие</div>
+                <div class="arrow">→</div>
+                <div class="flow-item">Запись</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Что можно записывать?</h3>
+            <ul>
+                <li>начало и завершение операции;</li>
+                <li>значения важных параметров;</li>
+                <li>состояние отдельных этапов;</li>
+                <li>предупреждения;</li>
+                <li>исключения и ошибки.</li>
+            </ul>
+        </div>
+
+    </div>
+
+    <div class="code" style="margin-top:25px">print(<span class="string">"Начало обработки заказа"</span>)
+print(<span class="string">"Получена цена:"</span>, price)
+print(<span class="string">"Получено количество:"</span>, quantity)
+print(<span class="string">"Расчёт завершён"</span>)</div>
+
+    <div class="callout">
+        <strong>Для учебных проектов</strong>
+        print() удобен для быстрого исследования программы.
+        В реальных проектах для диагностики обычно применяют
+        полноценное логирование.
+    </div>
+
+    <div class="slide-number">13 / 17</div>
+</section>
+
+
+<!-- 14 -->
+<section class="slide">
+    <div class="label">13 · Метод №3</div>
+    <h2>Breakpoint — точка останова</h2>
+
+    <p class="subtitle">
+        Breakpoint позволяет временно остановить выполнение программы
+        в определённой строке и изучить её состояние.
+    </p>
+
+    <div class="flow" style="margin-top:45px">
+
+        <div class="flow-item">
+            Строка 1
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item">
+            Строка 2
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item active">
+            ● BREAKPOINT
+        </div>
+
+        <div class="arrow">→</div>
+
+        <div class="flow-item">
+            Пауза
+        </div>
+
+    </div>
+
+    <div class="grid grid-3" style="margin-top:25px">
+
+        <div class="card">
+            <h3>Что можно увидеть?</h3>
+            <ul>
+                <li>значения переменных;</li>
+                <li>текущую строку;</li>
+                <li>стек вызовов;</li>
+                <li>состояние объектов.</li>
+            </ul>
+        </div>
+
+        <div class="card yellow">
+            <h3>Зачем нужен?</h3>
+            <p>
+                Чтобы остановить программу именно там,
+                где нужно исследовать её состояние.
+            </p>
+        </div>
+
+        <div class="card">
+            <h3>Главный вопрос</h3>
+            <p>
+                <strong>
+                    «Какие значения находятся в памяти
+                    в этот момент выполнения?»
+                </strong>
+            </p>
+        </div>
+
+    </div>
+
+    <div class="slide-number">14 / 17</div>
+</section>
+
+
+<!-- 15 -->
+<section class="slide">
+    <div class="label">14 · Пошаговая отладка</div>
+    <h2>Debugger позволяет «пройти» программу по строкам</h2>
+
+    <div class="grid grid-2" style="margin-top:25px">
+
+        <div class="code">def calculate(a, b):
+    result = a + b
+    return result
+
+
+x = 10
+y = 20
+
+total = calculate(x, y)
+
+<span class="keyword">print</span>(total)</div>
+
+        <div>
+
+            <div class="card">
+                <h3>Step Over</h3>
+                <p>
+                    Выполнить текущую строку и перейти к следующей,
+                    не заходя внутрь вызываемой функции.
+                </p>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+                <h3>Step Into</h3>
+                <p>
+                    Если строка вызывает функцию — перейти внутрь
+                    этой функции и исследовать её выполнение.
+                </p>
+            </div>
+
+            <div class="card" style="margin-top:12px">
+                <h3>Continue</h3>
+                <p>
+                    Продолжить выполнение программы до следующей
+                    точки останова или завершения.
+                </p>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="flow">
+        <div class="flow-item">Breakpoint</div>
+        <div class="arrow">→</div>
+        <div class="flow-item active">Step Over</div>
+        <div class="arrow">→</div>
+        <div class="flow-item active">Step Into</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Continue</div>
+    </div>
+
+    <div class="slide-number">15 / 17</div>
+</section>
+
+
+<!-- 16 -->
+<section class="slide">
+    <div class="label">15 · Методы в одной системе</div>
+    <h2>Как выбрать метод отладки?</h2>
+
+    <table class="compare" style="margin-top:30px">
+        <tr>
+            <th>Ситуация</th>
+            <th>Что использовать</th>
+            <th>Что хотим узнать</th>
+        </tr>
+
+        <tr>
+            <td>Нужно быстро проверить значение</td>
+            <td><span class="tag yellow">print()</span></td>
+            <td>Какое значение получила переменная?</td>
+        </tr>
+
+        <tr>
+            <td>Нужно увидеть последовательность событий</td>
+            <td><span class="tag yellow">Логирование</span></td>
+            <td>Что происходило во время работы программы?</td>
+        </tr>
+
+        <tr>
+            <td>Нужно остановиться в конкретном месте</td>
+            <td><span class="tag green">Breakpoint</span></td>
+            <td>В каком состоянии находится программа?</td>
+        </tr>
+
+        <tr>
+            <td>Нужно исследовать алгоритм по шагам</td>
+            <td><span class="tag green">Debugger</span></td>
+            <td>Как меняется состояние после каждой строки?</td>
+        </tr>
+
+        <tr>
+            <td>Есть исключение</td>
+            <td><span class="tag red">Traceback + Debugger</span></td>
+            <td>Где и при каких условиях возникла проблема?</td>
+        </tr>
+    </table>
+
+    <div class="callout">
+        <strong>Правило</strong>
+        Не существует одного универсального метода.
+        Хороший разработчик выбирает инструмент в зависимости от вопроса,
+        на который ему нужно получить ответ.
+    </div>
+
+    <div class="slide-number">16 / 17</div>
+</section>
+
+
+<!-- 17 -->
+<section class="slide">
+    <div class="label">16 · Итог первой пары</div>
+    <h2>Что нужно запомнить</h2>
+
+    <div class="grid grid-2" style="margin-top:25px">
+
+        <div class="card yellow">
+            <h3>Три главных вида ошибок</h3>
+
+            <div style="margin-top:20px">
+                <p><b>Синтаксическая</b><br>
+                Нарушены правила языка.</p>
+
+                <p><b>Runtime</b><br>
+                Проблема возникает во время выполнения.</p>
+
+                <p><b>Логическая</b><br>
+                Программа работает, но результат неправильный.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Четыре базовых метода</h3>
+
+            <div style="margin-top:20px">
+                <p>① <b>print()</b> — посмотреть значения.</p>
+                <p>② <b>Логи</b> — увидеть события.</p>
+                <p>③ <b>Breakpoint</b> — остановить выполнение.</p>
+                <p>④ <b>Debugger</b> — исследовать программу пошагово.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="flow">
+        <div class="flow-item">Обнаружили</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Воспроизвели</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Локализовали</div>
+        <div class="arrow">→</div>
+        <div class="flow-item active">Отладили</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Исправили</div>
+        <div class="arrow">→</div>
+        <div class="flow-item">Повторно протестировали</div>
+    </div>
+
+    <div class="card dark" style="margin-top:20px">
+        <div class="question">Главная мысль</div>
+        <p>
+            Отладка — это не угадывание исправления.
+            Это последовательное исследование программы,
+            поиск причины и проверка гипотез.
+        </p>
+    </div>
+
+    <div class="slide-number">17 / 17</div>
+</section>
+
+</div>
+
+
+<div class="nav">
+    <button onclick="prevSlide()">‹</button>
+    <button onclick="nextSlide()">›</button>
+</div>
+
+
+<script>
+
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const progress = document.getElementById('progress');
+
+function showSlide(index){
+    if(index < 0) index = 0;
+    if(index >= slides.length) index = slides.length - 1;
+
+    slides.forEach((slide,i)=>{
+        slide.classList.toggle('active', i === index);
+    });
+
+    current = index;
+
+    const percent =
+        ((current + 1) / slides.length) * 100;
+
+    progress.style.width = percent + "%";
+}
+
+function nextSlide(){
+    showSlide(current + 1);
+}
+
+function prevSlide(){
+    showSlide(current - 1);
+}
+
+document.addEventListener('keydown', e => {
+
+    if(e.key === "ArrowRight" || e.key === " "){
+        nextSlide();
+    }
+
+    if(e.key === "ArrowLeft"){
+        prevSlide();
+    }
+
+    if(e.key === "Home"){
+        showSlide(0);
+    }
+
+    if(e.key === "End"){
+        showSlide(slides.length - 1);
+    }
+
+});
+
+let touchStart = 0;
+
+document.addEventListener('touchstart', e=>{
+    touchStart = e.changedTouches[0].screenX;
+});
+
+document.addEventListener('touchend', e=>{
+    let touchEnd = e.changedTouches[0].screenX;
+
+    if(touchStart - touchEnd > 50){
+        nextSlide();
+    }
+
+    if(touchEnd - touchStart > 50){
+        prevSlide();
+    }
+});
+
+showSlide(0);
+
+</script>
+
+</body>
+</html>
